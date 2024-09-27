@@ -1,0 +1,39 @@
+[timestart] 100
+[size] 1391 828
+[pos] -1 -1
+*-4.034609 125 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
+[treeopen] tester.
+[treeopen] tester.t0.
+@28
+tester.t0.clk
+tester.t0.reset
+tester.t0.imuldiv.muldivreq_val
+tester.t0.imuldiv.muldivreq_rdy
+tester.t0.imuldiv.muldivreq_msg_fn[2:0]
+@22
+tester.t0.imuldiv.muldivreq_msg_a[31:0]
+tester.t0.imuldiv.muldivreq_msg_b[31:0]
+@28
+tester.t0.imuldiv.sign_bit_a
+tester.t0.imuldiv.sign_bit_b
+@22
+tester.t0.imuldiv.unsigned_a[31:0]
+tester.t0.imuldiv.unsigned_b[31:0]
+@28
+tester.t0.imuldiv.fn_reg[2:0]
+@22
+tester.t0.imuldiv.a_reg[64:0]
+tester.t0.imuldiv.b_reg[31:0]
+@28
+tester.t0.imuldiv.is_result_signed
+tester.t0.imuldiv.is_result_signed_divmul
+tester.t0.imuldiv.is_result_signed_rem
+@22
+tester.t0.imuldiv.unsigned_result[31:0]
+@28
+tester.t0.imuldiv.muldivresp_val
+tester.t0.imuldiv.muldivresp_rdy
+@22
+tester.t0.imuldiv.muldivresp_msg_result[31:0]
+[pattern_trace] 1
+[pattern_trace] 0
