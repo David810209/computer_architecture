@@ -9,7 +9,7 @@
 `include "riscvstall-InstMsg.v"
 `include "riscvstall-CoreDpathAlu.v"
 `include "riscvstall-CoreDpathRegfile.v"
-
+`include "riscvstall-CoreDpathPipeMulDiv.v"
 module riscv_CoreDpath
 (
   input clk,
@@ -433,7 +433,25 @@ module riscv_CoreDpath
     .muldivresp_val        (muldivresp_val),
     .muldivresp_rdy        (muldivresp_rdy)
   );
-
+  // wire dummy = 1'b0;
+  // riscv_CoreDpathPipeMulDiv imuldiv
+  // (
+  //   .clk                   (clk),
+  //   .reset                 (reset),
+  //   .muldivreq_msg_fn      (muldivreq_msg_fn_Xhl),
+  //   .muldivreq_msg_a       (op0_mux_out_Xhl),
+  //   .muldivreq_msg_b       (op1_mux_out_Xhl),
+  //   .muldivreq_val         (muldivreq_val),
+  //   .muldivreq_rdy         (muldivreq_rdy),
+  //   .muldivresp_msg_result (muldivresp_msg_result_Xhl),
+  //   .muldivresp_val        (muldivresp_val),
+  //   .muldivresp_rdy        (muldivresp_rdy),
+  //   .stall_Mhl             (dummy),
+  //   .stall_X2hl             (dummy),
+  //   .stall_X3hl             (dummy),
+  //   .stall_Xhl             (dummy)
+  // );  
+  
 endmodule
 
 `endif

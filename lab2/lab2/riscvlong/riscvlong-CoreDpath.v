@@ -9,6 +9,7 @@
 `include "riscvlong-InstMsg.v"
 `include "riscvlong-CoreDpathAlu.v"
 `include "riscvlong-CoreDpathRegfile.v"
+`include "riscvlong-CoreDpathPipeMulDiv.v"
 
 module riscv_CoreDpath
 (
@@ -30,6 +31,8 @@ module riscv_CoreDpath
   input   [1:0] pc_mux_sel_Phl,
   input   [1:0] op0_mux_sel_Dhl,
   input   [2:0] op1_mux_sel_Dhl,
+  input   [3:0] byp_op0_mux_sel_Dhl,
+  input   [3:0] byp_op1_mux_sel_Dhl,
   input  [31:0] inst_Dhl,
   input   [3:0] alu_fn_Xhl,
   input   [2:0] muldivreq_msg_fn_Xhl,
@@ -169,8 +172,14 @@ module riscv_CoreDpath
   // Jump reg address
 
   wire [31:0] jumpreg_targ_Dhl;
+  wire [31:0] jump_reg_rf_rdata0_Dhl = (byp_op0_mux_sel_Dhl == 4'd0) ? execute_mux_out_Xhl
+    :  (byp_op0_mux_sel_Dhl == 4'd1) ? wb_mux_out_Mhl
+    :  (byp_op0_mux_sel_Dhl == 4'd2) ? wb_mux_out_M2hl
+    :  (byp_op0_mux_sel_Dhl == 4'd3) ? wb_mux_out_M3hl
+    :  (byp_op0_mux_sel_Dhl == 4'd4) ? wb_mux_out_Whl
+    : rf_rdata0_Dhl;
 
-  wire [31:0] jumpreg_targ_pretruncate_Dhl = rf_rdata0_Dhl + imm_i_Dhl;
+  wire [31:0] jumpreg_targ_pretruncate_Dhl = jump_reg_rf_rdata0_Dhl + imm_i_Dhl;
   assign jumpreg_targ_Dhl  = {jumpreg_targ_pretruncate_Dhl[31:1], 1'b0};
 
   // Shift amount immediate
@@ -184,7 +193,14 @@ module riscv_CoreDpath
   // Operand 0 mux
 
   wire [31:0] op0_mux_out_Dhl
-    = ( op0_mux_sel_Dhl == 2'd0 ) ? rf_rdata0_Dhl
+    =( op0_mux_sel_Dhl == 4'd0 ) ? (
+        (byp_op0_mux_sel_Dhl == 4'd0) ? execute_mux_out_Xhl
+      : (byp_op0_mux_sel_Dhl == 4'd1) ? wb_mux_out_Mhl
+      :  (byp_op0_mux_sel_Dhl == 4'd2) ? wb_mux_out_M2hl
+      :  (byp_op0_mux_sel_Dhl == 4'd3) ? wb_mux_out_M3hl
+      :  (byp_op0_mux_sel_Dhl == 4'd4) ? wb_mux_out_Whl
+        :  rf_rdata0_Dhl
+    )
     : ( op0_mux_sel_Dhl == 2'd1 ) ? pc_Dhl
     : ( op0_mux_sel_Dhl == 2'd2 ) ? pc_plus4_Dhl
     : ( op0_mux_sel_Dhl == 2'd3 ) ? const0
@@ -193,7 +209,14 @@ module riscv_CoreDpath
   // Operand 1 mux
 
   wire [31:0] op1_mux_out_Dhl
-    = ( op1_mux_sel_Dhl == 3'd0 ) ? rf_rdata1_Dhl
+    = ( op1_mux_sel_Dhl == 3'd0 ) ? (
+        (byp_op1_mux_sel_Dhl == 4'd0) ? execute_mux_out_Xhl
+    :  (byp_op1_mux_sel_Dhl == 4'd1) ? wb_mux_out_Mhl
+    :  (byp_op1_mux_sel_Dhl == 4'd2) ? wb_mux_out_M2hl
+    :  (byp_op1_mux_sel_Dhl == 4'd3) ? wb_mux_out_M3hl
+      :  (byp_op1_mux_sel_Dhl == 4'd4) ? wb_mux_out_Whl
+    : rf_rdata1_Dhl
+    )
     : ( op1_mux_sel_Dhl == 3'd1 ) ? shamt_Dhl
     : ( op1_mux_sel_Dhl == 3'd2 ) ? imm_u_Dhl
     : ( op1_mux_sel_Dhl == 3'd3 ) ? imm_sb_Dhl
@@ -204,7 +227,12 @@ module riscv_CoreDpath
 
   // wdata with bypassing
 
-  wire [31:0] wdata_Dhl = rf_rdata1_Dhl;
+  wire [31:0] wdata_Dhl = (byp_op1_mux_sel_Dhl == 4'd0) ? execute_mux_out_Xhl
+    :  (byp_op1_mux_sel_Dhl == 4'd1) ? wb_mux_out_Mhl
+    :  (byp_op1_mux_sel_Dhl == 4'd2) ? wb_mux_out_M2hl
+    :  (byp_op1_mux_sel_Dhl == 4'd3) ? wb_mux_out_M3hl
+      :  (byp_op1_mux_sel_Dhl == 4'd4) ? wb_mux_out_Whl
+    :  rf_rdata1_Dhl;
 
   //----------------------------------------------------------------------
   // X <- D
@@ -266,6 +294,9 @@ module riscv_CoreDpath
     = ( execute_mux_sel_Xhl == 1'd0 ) ? alu_out_Xhl
     : ( execute_mux_sel_Xhl == 1'd1 ) ? muldiv_mux_out_Xhl
     :                                   32'bx;
+    // wire [31:0] execute_mux_out_Xhl
+    // = ( execute_mux_sel_Xhl == 1'd0 ) ? alu_out_Xhl
+    // :                                   32'bx;
 
   //----------------------------------------------------------------------
   // M <- X
@@ -274,12 +305,16 @@ module riscv_CoreDpath
   reg  [31:0] pc_Mhl;
   reg  [31:0] execute_mux_out_Mhl;
   reg  [31:0] wdata_Mhl;
+  reg         muldiv_mux_sel_Mhl;
+  reg         execute_mux_sel_Mhl;
 
   always @ (posedge clk) begin
     if( !stall_Mhl ) begin
       pc_Mhl              <= pc_Xhl;
       execute_mux_out_Mhl <= execute_mux_out_Xhl;
       wdata_Mhl           <= wdata_Xhl;
+      muldiv_mux_sel_Mhl <= muldiv_mux_sel_Xhl;
+      execute_mux_sel_Mhl <= execute_mux_sel_Mhl;
     end
   end
 
@@ -339,19 +374,81 @@ module riscv_CoreDpath
     : ( wb_mux_sel_Mhl == 1'd1 ) ? dmemresp_queue_mux_out_Mhl
     :                              32'bx;
 
-  //----------------------------------------------------------------------
+//----------------------------------------------------------------------
   // W <- M
   //----------------------------------------------------------------------
 
+  // reg  [31:0] pc_Whl;
+  // reg  [31:0] wb_mux_out_Whl;
+
+  // always @ (posedge clk) begin
+  //   if( !stall_Whl ) begin
+  //     pc_Whl                 <= pc_Mhl;
+  //     wb_mux_out_Whl         <= wb_mux_out_Mhl;
+  //   end
+  // end
+  //----------------------------------------------------------------------
+  // M2 <- M
+  //----------------------------------------------------------------------
+
+   reg  [31:0] pc_M2hl;
+  reg  [31:0] wb_mux_out_M2hl;
+  reg        muldiv_mux_sel_M2hl;
+  reg         execute_mux_sel_M2hl;
+
+  always @ (posedge clk) begin
+    if( !stall_Whl ) begin
+      pc_M2hl                 <= pc_Mhl;
+      wb_mux_out_M2hl         <= wb_mux_out_Mhl;
+      muldiv_mux_sel_M2hl    <= muldiv_mux_sel_Mhl;
+      execute_mux_sel_M2hl   <= execute_mux_sel_Mhl;
+    end
+  end
+  //----------------------------------------------------------------------
+  // M2 Stage
+  //----------------------------------------------------------------------
+
+  //----------------------------------------------------------------------
+    // M3 <- M2
+    //----------------------------------------------------------------------
+  reg  [31:0] pc_M3hl;
+  reg  [31:0] wb_reg_M3hl;
+  reg         muldiv_mux_sel_M3hl;
+  reg         execute_mux_sel_M3hl;
+
+  always @ (posedge clk) begin
+    if( !stall_Whl ) begin
+      pc_M3hl                 <= pc_M2hl;
+      wb_reg_M3hl         <= wb_mux_out_M2hl;
+      muldiv_mux_sel_M3hl     <= muldiv_mux_sel_M2hl;
+      execute_mux_sel_M3hl    <= execute_mux_sel_M2hl;
+    end
+  end
+
+  //----------------------------------------------------------------------
+  // M3 Stage
+  //----------------------------------------------------------------------
+  // wire [63:0] muldivresp_msg_result_M3hl;
+  // wire [31:0] muldiv_mux_out_M3hl
+  //   = ( muldiv_mux_sel_M3hl == 1'd0 ) ? muldivresp_msg_result_M3hl[31:0]
+  //   : ( muldiv_mux_sel_M3hl == 1'd1 ) ? muldivresp_msg_result_M3hl[63:32]
+  //   :                                  32'bx;
+  // wire [31:0] wb_mux_out_M3hl = execute_mux_sel_M3hl == 1'd1 &&muldivresp_val
+  //                               ? muldiv_mux_out_M3hl : wb_reg_M3hl;
+    wire [31:0] wb_mux_out_M3hl = wb_reg_M3hl;
+  // //----------------------------------------------------------------------
+  // // W <- M3
+  // //------------------------------------------------------------------------
   reg  [31:0] pc_Whl;
   reg  [31:0] wb_mux_out_Whl;
 
   always @ (posedge clk) begin
     if( !stall_Whl ) begin
-      pc_Whl                 <= pc_Mhl;
-      wb_mux_out_Whl         <= wb_mux_out_Mhl;
+      pc_Whl                 <= pc_M3hl;
+      wb_mux_out_Whl         <= wb_mux_out_M3hl;
     end
   end
+
 
   //----------------------------------------------------------------------
   // Writeback Stage
@@ -433,6 +530,25 @@ module riscv_CoreDpath
     .muldivresp_val        (muldivresp_val),
     .muldivresp_rdy        (muldivresp_rdy)
   );
+  // riscv_CoreDpathPipeMulDiv imuldiv
+  // (
+  //   .clk                   (clk),
+  //   .reset                 (reset),
+  //   .muldivreq_msg_fn      (muldivreq_msg_fn_Xhl),
+  //   .muldivreq_msg_a       (op0_mux_out_Xhl),
+  //   .muldivreq_msg_b       (op1_mux_out_Xhl),
+  //   .muldivreq_val         (muldivreq_val),
+  //   .muldivreq_rdy         (muldivreq_rdy),
+  //   .muldivresp_msg_result (muldivresp_msg_result_M3hl),
+  //   .muldivresp_val        (muldivresp_val),
+  //   .muldivresp_rdy        (muldivresp_rdy),
+  //   .stall_Xhl             (stall_Xhl),
+  //   .stall_Mhl             (stall_Mhl),
+  //   .stall_X2hl             (1'b0),
+  //   .stall_X3hl             (1'b0)
+  // );
+
+
 
 endmodule
 

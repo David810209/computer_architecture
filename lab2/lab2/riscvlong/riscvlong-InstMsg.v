@@ -359,6 +359,8 @@ module riscv_InstMsgDisasm
         `RISCV_INST_MSG_NOP     : $sformat( dasm, "nop                      "                         );
         `RISCV_INST_MSG_LUI     : $sformat( dasm, "lui    r%02d, %08x     ",         rd,       imm_u  );
         `RISCV_INST_MSG_AUIPC   : $sformat( dasm, "auipc  r%02d, %08x     ",         rd,       imm_u  );
+        // `RISCV_INST_MSG_J       : $sformat( dasm, "j      r%02d, %08x     ",         rd,       imm_uj );
+        // `RISCV_INST_MSG_JL     : $sformat( dasm, "jal    r%02d, %08x     ",         rd,       imm_uj );
         `RISCV_INST_MSG_JAL     : $sformat( dasm, "jal    r%02d, %08x     ",         rd,       imm_uj );
         `RISCV_INST_MSG_JALR    : $sformat( dasm, "jalr   r%02d, r%02d, %08x",       rd,  rs1, imm_i  );
         `RISCV_INST_MSG_BEQ     : $sformat( dasm, "beq    r%02d, r%02d, %08x",       rs1, rs2, imm_sb );

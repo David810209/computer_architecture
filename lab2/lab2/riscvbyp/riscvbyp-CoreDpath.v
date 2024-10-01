@@ -30,6 +30,8 @@ module riscv_CoreDpath
   input   [1:0] pc_mux_sel_Phl,
   input   [1:0] op0_mux_sel_Dhl,
   input   [2:0] op1_mux_sel_Dhl,
+  input   [2:0] byp_op0_mux_sel_Dhl,
+  input   [2:0] byp_op1_mux_sel_Dhl,
   input  [31:0] inst_Dhl,
   input   [3:0] alu_fn_Xhl,
   input   [2:0] muldivreq_msg_fn_Xhl,
@@ -169,8 +171,12 @@ module riscv_CoreDpath
   // Jump reg address
 
   wire [31:0] jumpreg_targ_Dhl;
+  wire [31:0] jump_reg_rf_rdata0_Dhl = (byp_op0_mux_sel_Dhl == 2'd0) ? execute_mux_out_Xhl
+    :  (byp_op0_mux_sel_Dhl == 2'd1) ? wb_mux_out_Mhl
+    :  (byp_op0_mux_sel_Dhl == 2'd2) ? wb_mux_out_Whl
+    : rf_rdata0_Dhl;
 
-  wire [31:0] jumpreg_targ_pretruncate_Dhl = rf_rdata0_Dhl + imm_i_Dhl;
+  wire [31:0] jumpreg_targ_pretruncate_Dhl = jump_reg_rf_rdata0_Dhl + imm_i_Dhl;
   assign jumpreg_targ_Dhl  = {jumpreg_targ_pretruncate_Dhl[31:1], 1'b0};
 
   // Shift amount immediate
@@ -184,7 +190,12 @@ module riscv_CoreDpath
   // Operand 0 mux
 
   wire [31:0] op0_mux_out_Dhl
-    = ( op0_mux_sel_Dhl == 2'd0 ) ? rf_rdata0_Dhl
+    =( op0_mux_sel_Dhl == 2'd0 ) ? (
+        (byp_op0_mux_sel_Dhl == 2'd0) ? execute_mux_out_Xhl
+      : (byp_op0_mux_sel_Dhl == 2'd1) ? wb_mux_out_Mhl
+      :  (byp_op0_mux_sel_Dhl == 2'd2) ? wb_mux_out_Whl
+        :  rf_rdata0_Dhl
+    )
     : ( op0_mux_sel_Dhl == 2'd1 ) ? pc_Dhl
     : ( op0_mux_sel_Dhl == 2'd2 ) ? pc_plus4_Dhl
     : ( op0_mux_sel_Dhl == 2'd3 ) ? const0
@@ -193,7 +204,12 @@ module riscv_CoreDpath
   // Operand 1 mux
 
   wire [31:0] op1_mux_out_Dhl
-    = ( op1_mux_sel_Dhl == 3'd0 ) ? rf_rdata1_Dhl
+    = ( op1_mux_sel_Dhl == 3'd0 ) ? (
+        (byp_op1_mux_sel_Dhl == 2'd0) ? execute_mux_out_Xhl
+    :  (byp_op1_mux_sel_Dhl == 2'd1) ? wb_mux_out_Mhl
+    :  (byp_op1_mux_sel_Dhl == 2'd2) ? wb_mux_out_Whl
+    : rf_rdata1_Dhl
+    )
     : ( op1_mux_sel_Dhl == 3'd1 ) ? shamt_Dhl
     : ( op1_mux_sel_Dhl == 3'd2 ) ? imm_u_Dhl
     : ( op1_mux_sel_Dhl == 3'd3 ) ? imm_sb_Dhl
@@ -204,14 +220,10 @@ module riscv_CoreDpath
 
   // wdata with bypassing
 
-  wire [31:0] wdata_Dhl = rf_rdata1_Dhl;
-
-  //bypass Mux
-  wire [31:0] rs1_X_byp_Dhl = execute_mux_out_Xhl;
-  wire [31:0] rs2_X_byp_Dhl = execute_mux_out_Xhl;
-  wire [31:0] rs1_M_byp_Dhl = dmemresp_mux_out_Mhl;
-  wire [31:0] rs2_M_byp_Dhl = dmemresp_mux_out_Mhl;
-  
+  wire [31:0] wdata_Dhl = (byp_op1_mux_sel_Dhl == 2'd0) ? execute_mux_out_Xhl
+    :  (byp_op1_mux_sel_Dhl == 2'd1) ? wb_mux_out_Mhl
+    :  (byp_op1_mux_sel_Dhl == 2'd2) ? wb_mux_out_Whl
+    :  rf_rdata1_Dhl;
 
   //----------------------------------------------------------------------
   // X <- D

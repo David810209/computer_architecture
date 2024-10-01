@@ -56,7 +56,6 @@ module riscv_CoreDpathPipeMulDiv
       fn_reg <= 0;
       a_reg <= 0;
       b_reg <= 0;
-      val0_reg <= 0;
       result1_reg <= 0;
       result2_reg <= 0;
       result3_reg <= 0;

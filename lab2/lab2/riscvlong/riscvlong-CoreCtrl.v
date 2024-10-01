@@ -31,6 +31,8 @@ module riscv_CoreCtrl
   output  [1:0] pc_mux_sel_Phl,
   output  [1:0] op0_mux_sel_Dhl,
   output  [2:0] op1_mux_sel_Dhl,
+  output  [3:0] byp_op0_mux_sel_Dhl,
+  output  [3:0] byp_op1_mux_sel_Dhl,
   output [31:0] inst_Dhl,
   output  [3:0] alu_fn_Xhl,
   output  [2:0] muldivreq_msg_fn_Xhl,
@@ -354,23 +356,66 @@ module riscv_CoreCtrl
 
       //                                j     br       pc      op0      rs1 op1       rs2 alu       md       md md     ex      mem  mem   memresp wb      rf      csr
       //                            val taken type     muxsel  muxsel   en  muxsel    en  fn        fn       en muxsel muxsel  rq   len   muxsel  muxsel  wen wa  wen
+      //Register-Immediate Arithmetic Instructions
+      `RISCV_INST_MSG_ADDI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_ANDI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_and,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_ORI     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_or,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_XORI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_xor,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLTI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_lt,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLTIU   :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_ltu,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SRAI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_sra,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SRLI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_srl,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLLI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_sll,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
       `RISCV_INST_MSG_LUI     :cs={ y,  n,    br_none, pm_p,   am_0,    n,  bm_imm_u, n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
       `RISCV_INST_MSG_AUIPC   :cs={ y,  n,    br_none, pm_p,   am_pc,   n,  bm_imm_u, n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
-
-      `RISCV_INST_MSG_ADDI    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
-      `RISCV_INST_MSG_ORI     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_or,   md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
-
+      //                                j     br       pc      op0      rs1 op1       rs2 alu       md       md md     ex      mem  mem   memresp wb      rf      csr
+      //                            val taken type     muxsel  muxsel   en  muxsel    en  fn        fn       en muxsel muxsel  rq   len   muxsel  muxsel  wen wa  wen
+      //register- register (r type)
       `RISCV_INST_MSG_ADD     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
-
+      `RISCV_INST_MSG_SUB     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_sub,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_AND     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_and,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_OR      :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_or,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_XOR     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_xor,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLT     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_lt,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLTU    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_ltu,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SRA     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_sra,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SRL     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_srl,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_SLL     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,  alu_sll,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_MUL     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_mul,    y, mdm_l, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_DIV     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_div,    y, mdm_l, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_DIVU    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_divu,    y, mdm_l, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_REM     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_rem,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_REMU    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_remu,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      //                                j     br       pc      op0      rs1 op1       rs2 alu       md       md md     ex      mem  mem   memresp wb      rf      csr
+      //                            val taken type     muxsel  muxsel   en  muxsel    en  fn        fn       en muxsel muxsel  rq   len   muxsel  muxsel  wen wa  wen
+      //Memory Instructions
       `RISCV_INST_MSG_LW      :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_i, n,  alu_add,  md_x,    n, mdm_x, em_x,   ld,  ml_w, dmm_w,  wm_mem, y,  rd, n   };
+      `RISCV_INST_MSG_LH      :cs={ y,  n,    br_none, pm_p,   am_rdat, y, bm_imm_i,  n,  alu_add,  md_x,    n, mdm_x, em_x,   ld,  ml_h, dmm_h,  wm_mem, y,  rd, n   };
+      `RISCV_INST_MSG_LHU     :cs={ y,  n,    br_none, pm_p,   am_rdat, y, bm_imm_i,  n,  alu_add,  md_x,    n, mdm_x, em_x,   ld,  ml_h, dmm_hu,  wm_mem, y,  rd, n   };
+      `RISCV_INST_MSG_LB      :cs={ y,  n,    br_none, pm_p,   am_rdat, y, bm_imm_i,  n,  alu_add,  md_x,    n, mdm_x, em_x,   ld,  ml_b, dmm_b,  wm_mem, y,  rd, n   };
+      `RISCV_INST_MSG_LBU     :cs={ y,  n,    br_none, pm_p,   am_rdat, y, bm_imm_i,  n,  alu_add,  md_x,    n, mdm_x, em_x,   ld,  ml_b, dmm_bu,  wm_mem, y,  rd, n   };
       `RISCV_INST_MSG_SW      :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_s, y,  alu_add,  md_x,    n, mdm_x, em_x,   st,  ml_w, dmm_w,  wm_mem, n,  rx, n   };
-
+      `RISCV_INST_MSG_SH      :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_s, y,  alu_add,  md_x,    n, mdm_x, em_x,   st,  ml_h, dmm_h,  wm_mem, n,  rx, n   };
+      `RISCV_INST_MSG_SB      :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_imm_s, y,  alu_add,  md_x,    n, mdm_x, em_x,   st,  ml_b, dmm_b,  wm_mem, n,  rx, n   };
+      //                                j     br       pc      op0      rs1 op1       rs2 alu       md       md md     ex      mem  mem   memresp wb      rf      csr
+      //                            val taken type     muxsel  muxsel   en  muxsel    en  fn        fn       en muxsel muxsel  rq   len   muxsel  muxsel  wen wa  wen
+      //Unconditional Jump Instructions
       `RISCV_INST_MSG_JAL     :cs={ y,  y,    br_none, pm_j,   am_pc4,  n,  bm_0,     n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_JALR    :cs={ y,  y,    br_none, pm_r,   am_pc4,  y,  bm_0,     n,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      // `RISCV_INST_MSG_JR      :cs={ y,  y,    br_none, pm_r,   am_0  ,  n,  bm_0,     n,  alu_x  ,  md_x,    n, mdm_x, em_x  , nr,  ml_x, dmm_x,  wm_x  , n,  rx, n   };
+      // `RISCV_INST_MSG_J       :cs={ y,  y,    br_none, pm_j,   am_0  ,  n,  bm_0,     n,  alu_x  ,  md_x,    n, mdm_x, em_x  , nr,  ml_x, dmm_x,  wm_x  , n,  rx, n   };
 
+      //Conditional Branch Instructions
       `RISCV_INST_MSG_BNE     :cs={ y,  n,    br_bne,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_xor,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
+      `RISCV_INST_MSG_BEQ     :cs={ y,  n,    br_beq,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_xor,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
       `RISCV_INST_MSG_BLT     :cs={ y,  n,    br_blt,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_sub,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
+      `RISCV_INST_MSG_BLTU    :cs={ y,  n,    br_bltu,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_sub,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
+      `RISCV_INST_MSG_BGE     :cs={ y,  n,    br_bge,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_sub,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
+      `RISCV_INST_MSG_BGEU    :cs={ y,  n,    br_bgeu,  pm_b,   am_rdat, y,  bm_rdat,  y,  alu_sub,  md_x,    n, mdm_x, em_x,   nr,  ml_x, dmm_x,  wm_x,   n,  rx, n   };
 
       `RISCV_INST_MSG_CSRW    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_0,     y,  alu_add,  md_x,    n, mdm_x, em_alu, nr,  ml_x, dmm_x,  wm_alu, n,  rx, y   };
+      
+
 
     endcase
 
@@ -417,12 +462,16 @@ module riscv_CoreCtrl
   // Execute Mux Select
 
   wire execute_mux_sel_Dhl = cs[`RISCV_INST_MSG_EX_SEL];
-
+  wire is_alu_Dhl              = (cs[`RISCV_INST_MSG_EX_SEL] == em_alu) ||
+                                (cs[`RISCV_INST_MSG_EX_SEL] == em_md);
+  // wire is_alu_Dhl              = (cs[`RISCV_INST_MSG_EX_SEL] == em_alu);
+  wire is_md_Dhl               = (cs[`RISCV_INST_MSG_EX_SEL] == em_md);
   // Memory Controls
 
   wire       dmemreq_msg_rw_Dhl  = ( cs[`RISCV_INST_MSG_MEM_REQ] == st );
   wire [1:0] dmemreq_msg_len_Dhl = cs[`RISCV_INST_MSG_MEM_LEN];
   wire       dmemreq_val_Dhl     = ( cs[`RISCV_INST_MSG_MEM_REQ] != nr );
+  wire       is_load_Dhl             = ( cs[`RISCV_INST_MSG_MEM_REQ] == ld ); 
 
   // Memory response mux select
 
@@ -460,26 +509,46 @@ module riscv_CoreCtrl
   // Stall for data hazards if either of the operand read addresses are
   // the same as the write addresses of instruction later in the pipeline
 
-  wire stall_hazard_Dhl   = inst_val_Dhl && (
-                            ( rs1_en_Dhl && inst_val_Xhl && rf_wen_Xhl
+  // wire stall_hazard_Dhl   = inst_val_Dhl && (
+  //                           ( rs1_en_Dhl && inst_val_Xhl && rf_wen_Xhl
+  //                             && ( rs1_addr_Dhl == rf_waddr_Xhl )
+  //                             && ( rf_waddr_Xhl != 5'd0 ) )
+  //                        || ( rs1_en_Dhl && inst_val_Mhl && rf_wen_Mhl
+  //                             && ( rs1_addr_Dhl == rf_waddr_Mhl )
+  //                             && ( rf_waddr_Mhl != 5'd0 ) )
+  //                        || ( rs1_en_Dhl && inst_val_Whl && rf_wen_Whl
+  //                             && ( rs1_addr_Dhl == rf_waddr_Whl )
+  //                             && ( rf_waddr_Whl != 5'd0 ) )
+  //                        || ( rs2_en_Dhl && inst_val_Xhl && rf_wen_Xhl
+  //                             && ( rs2_addr_Dhl == rf_waddr_Xhl )
+  //                             && ( rf_waddr_Xhl != 5'd0 ) )
+  //                        || ( rs2_en_Dhl && inst_val_Mhl && rf_wen_Mhl
+  //                             && ( rs2_addr_Dhl == rf_waddr_Mhl )
+  //                             && ( rf_waddr_Mhl != 5'd0 ) )
+  //                        || ( rs2_en_Dhl && inst_val_Whl && rf_wen_Whl
+  //                             && ( rs2_addr_Dhl == rf_waddr_Whl )
+  //                             && ( rf_waddr_Whl != 5'd0 ) ) );
+  wire stall_hazard_Dhl = inst_val_Dhl && (
+                            ( rs1_en_Dhl && inst_val_Xhl && rf_wen_stall_Xhl
                               && ( rs1_addr_Dhl == rf_waddr_Xhl )
                               && ( rf_waddr_Xhl != 5'd0 ) )
-                         || ( rs1_en_Dhl && inst_val_Mhl && rf_wen_Mhl
-                              && ( rs1_addr_Dhl == rf_waddr_Mhl )
-                              && ( rf_waddr_Mhl != 5'd0 ) )
-                         || ( rs1_en_Dhl && inst_val_Whl && rf_wen_Whl
-                              && ( rs1_addr_Dhl == rf_waddr_Whl )
-                              && ( rf_waddr_Whl != 5'd0 ) )
-                         || ( rs2_en_Dhl && inst_val_Xhl && rf_wen_Xhl
-                              && ( rs2_addr_Dhl == rf_waddr_Xhl )
-                              && ( rf_waddr_Xhl != 5'd0 ) )
-                         || ( rs2_en_Dhl && inst_val_Mhl && rf_wen_Mhl
-                              && ( rs2_addr_Dhl == rf_waddr_Mhl )
-                              && ( rf_waddr_Mhl != 5'd0 ) )
-                         || ( rs2_en_Dhl && inst_val_Whl && rf_wen_Whl
-                              && ( rs2_addr_Dhl == rf_waddr_Whl )
-                              && ( rf_waddr_Whl != 5'd0 ) ) );
+                        // ||  ( rs1_en_Dhl && inst_val_Mhl && rf_wen_stall_Mhl 
+                        //       && ( rs1_addr_Dhl == rf_waddr_Mhl )
+                        //       && ( rf_waddr_Mhl != 5'd0 ) )
+                        // ||  ( rs1_en_Dhl && inst_val_M2hl  && rf_wen_stall_M2hl
+                        //       && ( rs1_addr_Dhl == rf_waddr_M2hl )
+                        //       && ( rf_waddr_M2hl != 5'd0 ) ) 
 
+                         || ( rs2_en_Dhl && inst_val_Xhl && rf_wen_stall_Xhl
+                              && ( rs2_addr_Dhl == rf_waddr_Xhl )
+                              && ( rf_waddr_Xhl != 5'd0 ) ))
+                        // ||  ( rs2_en_Dhl && inst_val_Mhl && rf_wen_stall_Mhl 
+                        //       && ( rs2_addr_Dhl == rf_waddr_Mhl )
+                        //       && ( rf_waddr_Mhl != 5'd0 ) )
+                        // ||  ( rs2_en_Dhl && inst_val_M2hl  && rf_wen_stall_M2hl
+                        //       && ( rs2_addr_Dhl == rf_waddr_M2hl )
+                        //       && ( rf_waddr_M2hl != 5'd0 ) ) ;
+                        ;
   // Aggregate Stall Signal
 
   assign stall_Dhl = ( stall_Xhl
@@ -492,6 +561,66 @@ module riscv_CoreCtrl
   wire bubble_next_Dhl = ( !bubble_sel_Dhl ) ? bubble_Dhl
                        : ( bubble_sel_Dhl )  ? 1'b1
                        :                       1'bx;
+
+  //bypass signal
+  localparam byp_exe = 3'd0;
+  localparam byp_mem = 3'd1;
+  localparam byp_mem2 = 3'd2;
+  localparam byp_mem3 = 3'd3;
+  localparam byp_wb = 3'd4;
+  localparam byp_none = 3'd5;
+
+  wire [3:0] byp_op0_mux_sel_Dhl = inst_val_Dhl && 
+                              ( rs1_en_Dhl && inst_val_Xhl && rf_wen_bypass_Xhl 
+                              && ( rs1_addr_Dhl == rf_waddr_Xhl )
+                              && ( rf_waddr_Xhl != 5'd0 ) )
+                              ? byp_exe :
+                              inst_val_Dhl && 
+                              ( rs1_en_Dhl && inst_val_Mhl && rf_wen_Mhl 
+                              && ( rs1_addr_Dhl == rf_waddr_Mhl )
+                              && ( rf_waddr_Mhl != 5'd0 ) )
+                              ? byp_mem :
+                              inst_val_Dhl && 
+                              ( rs1_en_Dhl && inst_val_M2hl  && rf_wen_M2hl
+                              && ( rs1_addr_Dhl == rf_waddr_M2hl )
+                              && ( rf_waddr_M2hl != 5'd0 ) )
+                              ? byp_mem2 :
+                              inst_val_Dhl && inst_val_M3hl  && 
+                              ( rs1_en_Dhl  && rf_wen_M3hl
+                              && ( rs1_addr_Dhl == rf_waddr_M3hl )
+                              && ( rf_waddr_M3hl != 5'd0 ) )
+                              ? byp_mem3 :
+                              inst_val_Dhl && 
+                              ( rs1_en_Dhl && inst_val_Whl && rf_wen_Whl
+                              && ( rs1_addr_Dhl == rf_waddr_Whl )
+                              && ( rf_waddr_Whl != 5'd0 ) )
+                              ? byp_wb : byp_none;
+
+  wire [3:0] byp_op1_mux_sel_Dhl = inst_val_Dhl && 
+                              ( rs2_en_Dhl && inst_val_Xhl && rf_wen_bypass_Xhl 
+                              && ( rs2_addr_Dhl == rf_waddr_Xhl )
+                              && ( rf_waddr_Xhl != 5'd0 ) )
+                              ? byp_exe :
+                              inst_val_Dhl && 
+                              ( rs2_en_Dhl && inst_val_Mhl && rf_wen_Mhl 
+                              && ( rs2_addr_Dhl == rf_waddr_Mhl )
+                              && ( rf_waddr_Mhl != 5'd0 ) )
+                              ? byp_mem :
+                              inst_val_Dhl && 
+                              ( rs2_en_Dhl  && rf_wen_M2hl
+                              && ( rs2_addr_Dhl == rf_waddr_M2hl )
+                              && ( rf_waddr_M2hl != 5'd0 ) )
+                              ? byp_mem2 :
+                              inst_val_Dhl && 
+                              ( rs2_en_Dhl  && rf_wen_M3hl
+                              && ( rs2_addr_Dhl == rf_waddr_M3hl )
+                              && ( rf_waddr_M3hl != 5'd0 ) )
+                              ? byp_mem3 :
+                              inst_val_Dhl && 
+                              ( rs2_en_Dhl && inst_val_Whl && rf_wen_Whl
+                              && ( rs2_addr_Dhl == rf_waddr_Whl )
+                              && ( rf_waddr_Whl != 5'd0 ) )
+                              ? byp_wb : byp_none;
 
   //----------------------------------------------------------------------
   // X <- D
@@ -515,6 +644,9 @@ module riscv_CoreCtrl
   reg [11:0] csr_addr_Xhl;
 
   reg        bubble_Xhl;
+  reg        is_load_Xhl;
+  reg        is_alu_Xhl;
+  reg        is_md_Xhl;
 
   // Pipeline Controls
 
@@ -541,6 +673,10 @@ module riscv_CoreCtrl
       csr_addr_Xhl         <= csr_addr_Dhl;
 
       bubble_Xhl           <= bubble_next_Dhl;
+
+      is_load_Xhl          <= is_load_Dhl;
+      is_alu_Xhl           <= is_alu_Dhl;
+      is_md_Xhl            <= is_md_Dhl;
     end
 
   end
@@ -565,12 +701,15 @@ module riscv_CoreCtrl
   assign dmemreq_val     = ( inst_val_Xhl && !stall_Xhl && dmemreq_val_Xhl );
 
   // Resolve Branch
-
+  wire beq_taken_Xhl  = ( ( br_sel_Xhl == br_beq ) && branch_cond_eq_Xhl );
   wire bne_taken_Xhl  = ( ( br_sel_Xhl == br_bne ) && branch_cond_ne_Xhl );
   wire blt_taken_Xhl  = ( ( br_sel_Xhl == br_blt ) && branch_cond_lt_Xhl );
+  wire bltu_taken_Xhl  = ( ( br_sel_Xhl == br_bltu ) && branch_cond_ltu_Xhl );
+  wire bge_taken_Xhl  = ( ( br_sel_Xhl == br_bge ) && branch_cond_ge_Xhl );
+  wire bgeu_taken_Xhl  = ( ( br_sel_Xhl == br_bgeu ) && branch_cond_geu_Xhl );
 
   wire any_br_taken_Xhl
-    = ( bne_taken_Xhl || blt_taken_Xhl
+    = ( beq_taken_Xhl || bne_taken_Xhl || blt_taken_Xhl ||bltu_taken_Xhl || bge_taken_Xhl || bgeu_taken_Xhl
       );
 
   wire brj_taken_Xhl = ( inst_val_Xhl && any_br_taken_Xhl );
@@ -594,6 +733,7 @@ module riscv_CoreCtrl
   // Aggregate Stall Signal
 
   assign stall_Xhl = ( stall_Mhl || stall_muldiv_Xhl || stall_imem_Xhl || stall_dmem_Xhl );
+  // assign stall_Xhl = ( stall_Mhl  || stall_imem_Xhl || stall_dmem_Xhl );
 
   // Next bubble bit
 
@@ -601,6 +741,11 @@ module riscv_CoreCtrl
   wire bubble_next_Xhl = ( !bubble_sel_Xhl ) ? bubble_Xhl
                        : ( bubble_sel_Xhl )  ? 1'b1
                        :                       1'bx;
+
+  //bypass signal
+  // wire rf_wen_stall_Xhl = is_load_Xhl || is_md_Xhl ? rf_wen_Xhl : 1'd0;
+  wire rf_wen_stall_Xhl = is_load_Xhl ? rf_wen_Xhl : 1'd0;
+  wire rf_wen_bypass_Xhl = is_alu_Xhl ? rf_wen_Xhl : 1'd0;
 
   //----------------------------------------------------------------------
   // M <- X
@@ -616,6 +761,7 @@ module riscv_CoreCtrl
   reg [11:0] csr_addr_Mhl;
 
   reg        bubble_Mhl;
+  reg        is_md_Mhl;
 
   // Pipeline Controls
 
@@ -633,6 +779,7 @@ module riscv_CoreCtrl
       csr_addr_Mhl         <= csr_addr_Xhl;
 
       bubble_Mhl           <= bubble_next_Xhl;
+      is_md_Mhl            <= is_md_Xhl;
     end
     dmemreq_val_Mhl <= dmemreq_val;
   end
@@ -670,13 +817,118 @@ module riscv_CoreCtrl
   wire bubble_next_Mhl = ( !bubble_sel_Mhl ) ? bubble_Mhl
                        : ( bubble_sel_Mhl )  ? 1'b1
                        :                       1'bx;
+  //bypass
+  // wire rf_wen_stall_Mhl = is_md_Mhl ? rf_wen_Mhl : 1'd0;
+  // wire rf_wen_byp_Mhl = is_md_Mhl ? 1'd0 : rf_wen_Mhl;
+                       
+  // //----------------------------------------------------------------------
+  // // W <- M
+  // //----------------------------------------------------------------------
+
+  // reg [31:0] ir_Whl;
+  // reg        dmemresp_queue_val_Mhl;
+  // reg        rf_wen_Whl;
+  // reg  [4:0] rf_waddr_Whl;
+  // reg        csr_wen_Whl;
+  // reg [11:0] csr_addr_Whl;
+
+  // reg        bubble_Whl;
+
+  // // Pipeline Controls
+
+  // always @ ( posedge clk ) begin
+  //   if ( reset ) begin
+  //     bubble_Whl <= 1'b1;
+  //   end
+  //   else if( !stall_Whl ) begin
+  //     ir_Whl           <= ir_Mhl;
+  //     rf_wen_Whl       <= rf_wen_Mhl;
+  //     rf_waddr_Whl     <= rf_waddr_Mhl;
+  //     csr_wen_Whl      <= csr_wen_Mhl;
+  //     csr_addr_Whl     <= csr_addr_Mhl;
+
+  //     bubble_Whl       <= bubble_next_Mhl;
+  //   end
+  //   dmemresp_queue_val_Mhl <= dmemresp_queue_val_next_Mhl;
+  // end
 
   //----------------------------------------------------------------------
-  // W <- M
+  // M2 <- M
   //----------------------------------------------------------------------
+  reg [31:0] ir_M2hl;
+  reg        dmemresp_queue_val_Mhl;
+  reg        rf_wen_M2hl;
+  reg  [4:0] rf_waddr_M2hl;
+  reg        csr_wen_M2hl;
+  reg [11:0] csr_addr_M2hl;
+
+  reg        bubble_M2hl;
+  reg        is_md_M2hl;
+
+  // Pipeline Controls
+
+  always @ ( posedge clk ) begin
+    if ( reset ) begin
+      bubble_M2hl <= 1'b1;
+    end
+    else if( !stall_Whl )  begin
+      ir_M2hl           <= ir_Mhl;
+      rf_wen_M2hl       <= rf_wen_Mhl;
+      rf_waddr_M2hl     <= rf_waddr_Mhl;
+      csr_wen_M2hl      <= csr_wen_Mhl;
+      csr_addr_M2hl     <= csr_addr_Mhl;
+
+      bubble_M2hl       <= bubble_next_Mhl;
+      is_md_M2hl        <= is_md_Mhl;
+    end
+    dmemresp_queue_val_Mhl <= dmemresp_queue_val_next_Mhl;
+  end
+    //----------------------------------------------------------------------
+    // M2 Stage
+    //----------------------------------------------------------------------
+     wire inst_val_M2hl = ( !bubble_M2hl  );
+    //  wire rf_wen_stall_M2hl = is_md_M2hl ? rf_wen_M2hl : 1'b0;
+    //  wire rf_wen_byp_M2hl = is_md_M2hl ? 1'b0 :  rf_wen_M2hl;
+    //----------------------------------------------------------------------
+    // M3 <- M2
+    //----------------------------------------------------------------------
+   reg [31:0] ir_M3hl;
+  reg        rf_wen_M3hl;
+  reg  [4:0] rf_waddr_M3hl;
+  reg        csr_wen_M3hl;
+  reg [11:0] csr_addr_M3hl;
+
+  reg        bubble_M3hl;
+
+  // Pipeline Controls
+
+  always @ ( posedge clk ) begin
+    if ( reset ) begin
+      bubble_M3hl <= 1'b1;
+    end
+    else  if( !stall_Whl ) begin
+      ir_M3hl           <= ir_M2hl;
+      rf_wen_M3hl       <= rf_wen_M2hl;
+      rf_waddr_M3hl     <= rf_waddr_M2hl;
+      csr_wen_M3hl      <= csr_wen_M2hl;
+      csr_addr_M3hl     <= csr_addr_M2hl;
+
+      bubble_M3hl       <= bubble_M2hl;
+    end
+    // dmemresp_queue_val_Mhl <= dmemresp_queue_val_next_Mhl;
+  end
+  //----------------------------------------------------------------------
+  // M3 Stage
+  //----------------------------------------------------------------------
+  wire inst_val_M3hl = ( !bubble_M3hl  );
+  // assign muldivresp_rdy = 1'b1;
+
+  // //----------------------------------------------------------------------
+  // // W <- M3
+  // //----------------------------------------------------------------------
 
   reg [31:0] ir_Whl;
-  reg        dmemresp_queue_val_Mhl;
+  // reg        dmemresp_queue_val_Mhl;
   reg        rf_wen_Whl;
   reg  [4:0] rf_waddr_Whl;
   reg        csr_wen_Whl;
@@ -691,15 +943,15 @@ module riscv_CoreCtrl
       bubble_Whl <= 1'b1;
     end
     else if( !stall_Whl ) begin
-      ir_Whl           <= ir_Mhl;
-      rf_wen_Whl       <= rf_wen_Mhl;
-      rf_waddr_Whl     <= rf_waddr_Mhl;
-      csr_wen_Whl      <= csr_wen_Mhl;
-      csr_addr_Whl     <= csr_addr_Mhl;
+      ir_Whl           <= ir_M3hl;
+      rf_wen_Whl       <= rf_wen_M3hl;
+      rf_waddr_Whl     <= rf_waddr_M3hl;
+      csr_wen_Whl      <= csr_wen_M3hl;
+      csr_addr_Whl     <= csr_addr_M3hl;
 
-      bubble_Whl       <= bubble_next_Mhl;
+      bubble_Whl       <= bubble_M3hl;
     end
-    dmemresp_queue_val_Mhl <= dmemresp_queue_val_next_Mhl;
+    // dmemresp_queue_val_Mhl <= dmemresp_queue_val_next_Mhl;
   end
 
   //----------------------------------------------------------------------
@@ -709,6 +961,7 @@ module riscv_CoreCtrl
   // Is current stage valid?
 
   wire inst_val_Whl = ( !bubble_Whl && !squash_Whl );
+  
 
   // Only set register file wen if stage is valid
 
