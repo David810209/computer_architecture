@@ -25,7 +25,11 @@ module riscv_CoreDpathPipeMulDiv
   input         stall_Xhl,
   input         stall_Mhl,
   input         stall_X2hl,
-  input         stall_X3hl
+  input         stall_X3hl,
+
+  //muldiv mux
+  input         muldiv_mux_sel_Dhl,
+  output        muldiv_mux_sel_M3hl
 );
 
   // Set request ready if not stalled
@@ -40,53 +44,26 @@ module riscv_CoreDpathPipeMulDiv
   reg  [2:0] fn_reg;
   reg [31:0] a_reg;
   reg [31:0] b_reg;
-  reg [63:0] result1_reg;
-  reg [63:0] result2_reg;
-  reg [63:0] result3_reg;
-  
   reg        val0_reg;
-  reg        val1_reg;
-  reg        val2_reg;
-  reg        val3_reg;
-  wire val1_next = (stall_Xhl) ? 1'b0: (val0_reg);
-  wire val2_next = (stall_Mhl) ? 1'b0: (val1_reg);
- 
+  reg        muldiv_mux_reg;
   always @ ( posedge clk ) begin
     if ( reset ) begin
       fn_reg <= 0;
       a_reg <= 0;
       b_reg <= 0;
-      result1_reg <= 0;
-      result2_reg <= 0;
-      result3_reg <= 0;
-  
       val0_reg <= 0;
-      val1_reg <= 0;
-      val2_reg <= 0;
-      val3_reg <= 0;
     end else begin
       if ( muldivreq_go ) begin
         fn_reg   <= muldivreq_msg_fn;
         a_reg    <= muldivreq_msg_a;
         b_reg    <= muldivreq_msg_b;
         val0_reg <= 1'b1;
+        muldiv_mux_reg <= muldiv_mux_sel_Dhl;
       end else if (!stall_Xhl) begin
         val0_reg <= 1'b0;
       end
-      if (! stall_Mhl) begin
-          result1_reg <= result0;
-          val1_reg <= val1_next;
-      end
-      if ( !stall  ) begin
-        result2_reg <= result1_reg;
-        result3_reg <= result2_reg;
-        val2_reg    <= val2_next;
-        val3_reg    <= val2_reg;
-      end
     end
   end
-  
-
  
   //----------------------------------------------------------------------
   // Functional Computation
@@ -141,16 +118,77 @@ module riscv_CoreDpathPipeMulDiv
     : ( fn_reg == `IMULDIV_MULDIVREQ_MSG_FUNC_REM  ) ? { remainder, quotient }
     : ( fn_reg == `IMULDIV_MULDIVREQ_MSG_FUNC_REMU ) ? { remainderu, quotientu }
     :                                                  32'bx;
-
   //----------------------------------------------------------------------
-  // Dummy Pipeline Stages
+  // dummy1 <- execution
+  //----------------------------------------------------------------------
+  reg        val1_reg;
+  reg [63:0] result1_reg;
+  reg        muldiv_mux_reg_2;
+  wire val1_next = (stall_Xhl) ? 1'b0: (val0_reg);
+
+   always @ ( posedge clk ) begin
+    if ( reset ) begin
+      result1_reg <= 0;
+      val1_reg <= 0;
+    end else if (! stall_Mhl) begin
+          result1_reg <= result0;
+          val1_reg <= val1_next;
+          muldiv_mux_reg_2 <= muldiv_mux_reg;
+    end
+  end
+  //----------------------------------------------------------------------
+  // Dummy Pipeline Stages 1
+  //----------------------------------------------------------------------
+    //----------------------------------------------------------------------
+  // dummy2 <- dummy1
   //----------------------------------------------------------------------
 
+  reg        val2_reg;
+  reg [63:0] result2_reg;
+  reg        muldiv_mux_reg_3;
+  wire val2_next = (stall_Mhl) ? 1'b0: (val1_reg);
+  always @ ( posedge clk ) begin
+    if ( reset ) begin
+      result2_reg <= 0;
+      val2_reg <= 0;
+    end else begin
+      if ( !stall  ) begin
+        result2_reg <= result1_reg;
+        val2_reg    <= val2_next;
+        muldiv_mux_reg_3 <= muldiv_mux_reg_2;
+      end
+    end
+  end
+    //----------------------------------------------------------------------
+  // Dummy Pipeline Stages 2
+  //----------------------------------------------------------------------
+    //----------------------------------------------------------------------
+  // output <- dummy2
+  //----------------------------------------------------------------------
+  reg [63:0] result3_reg;
+  reg        val3_reg;
+  reg        muldiv_mux_reg_4;
+
+  always @ ( posedge clk ) begin
+    if ( reset ) begin
+      result3_reg <= 0;
   
+      val3_reg <= 0;
+    end else begin
+      if ( !stall  ) begin
+        result3_reg <= result2_reg;
+        val3_reg    <= val2_reg;
+        muldiv_mux_reg_4 <= muldiv_mux_reg_3;
+      end
+    end
+  end
+  //----------------------------------------------------------------------
+  //output  Stages 
+  //----------------------------------------------------------------------
   // Set response data
 
   assign muldivresp_msg_result = result3_reg;
-
+  assign muldiv_mux_sel_M3hl = muldiv_mux_reg_4;
   // Set response valid
 
   assign muldivresp_val = val3_reg;

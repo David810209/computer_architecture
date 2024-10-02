@@ -59,11 +59,13 @@ module riscv_Core
   wire [31:0] inst_Dhl;
   wire  [3:0] alu_fn_Xhl;
   wire  [2:0] muldivreq_msg_fn_Xhl;
+  wire  [2:0] muldivreq_msg_fn_Dhl;
   wire        muldivreq_val;
   wire        muldivreq_rdy;
   wire        muldivresp_val;
   wire        muldivresp_rdy;
   wire        muldiv_mux_sel_Xhl;
+  wire        muldiv_mux_sel_Dhl;
   wire        execute_mux_sel_Xhl;
   wire  [2:0] dmemresp_mux_sel_Mhl;
   wire        dmemresp_queue_en_Mhl;
@@ -161,11 +163,13 @@ module riscv_Core
     .inst_Dhl               (inst_Dhl),
     .alu_fn_Xhl             (alu_fn_Xhl),
     .muldivreq_msg_fn_Xhl   (muldivreq_msg_fn_Xhl),
+    .muldivreq_msg_fn_Dhl   (muldivreq_msg_fn_Dhl),
     .muldivreq_val          (muldivreq_val),
     .muldivreq_rdy          (muldivreq_rdy),
     .muldivresp_val         (muldivresp_val),
     .muldivresp_rdy         (muldivresp_rdy),
     .muldiv_mux_sel_Xhl     (muldiv_mux_sel_Xhl),
+    .muldiv_mux_sel_Dhl     (muldiv_mux_sel_Dhl),
     .execute_mux_sel_Xhl    (execute_mux_sel_Xhl),
     .dmemresp_mux_sel_Mhl   (dmemresp_mux_sel_Mhl),
     .dmemresp_queue_en_Mhl  (dmemresp_queue_en_Mhl),
@@ -223,11 +227,13 @@ module riscv_Core
     .inst_Dhl                (inst_Dhl),
     .alu_fn_Xhl              (alu_fn_Xhl),
     .muldivreq_msg_fn_Xhl    (muldivreq_msg_fn_Xhl),
+    .muldivreq_msg_fn_Dhl    (muldivreq_msg_fn_Dhl),
     .muldivreq_val           (muldivreq_val),
     .muldivreq_rdy           (muldivreq_rdy),
     .muldivresp_val          (muldivresp_val),
     .muldivresp_rdy          (muldivresp_rdy),
     .muldiv_mux_sel_Xhl      (muldiv_mux_sel_Xhl),
+    .muldiv_mux_sel_Dhl      (muldiv_mux_sel_Dhl),
     .execute_mux_sel_Xhl     (execute_mux_sel_Xhl),
     .dmemresp_mux_sel_Mhl    (dmemresp_mux_sel_Mhl),
     .dmemresp_queue_en_Mhl   (dmemresp_queue_en_Mhl),
