@@ -144,9 +144,9 @@
 // Omitted: FENCE, FENCE.I, ECALL, EBREAK, CSRRW, CSRRS, CSRRC, CSRRWI, CSRRSI, CSRRCI
 // RISCV32M
 `define RISCV_INST_MSG_MUL      32'b0000001_?????_?????_000_?????_0110011
-// `define RISCV_INST_MSG_MULH     32'b0000001_?????_?????_001_?????_0110011  // not supported.
-// `define RISCV_INST_MSG_MULHSU   32'b0000001_?????_?????_010_?????_0110011  // not supported.
-// `define RISCV_INST_MSG_MULHU    32'b0000001_?????_?????_011_?????_0110011  // not supported.
+`define RISCV_INST_MSG_MULH     32'b0000001_?????_?????_001_?????_0110011  // not supported.
+`define RISCV_INST_MSG_MULHSU   32'b0000001_?????_?????_010_?????_0110011  // not supported.
+`define RISCV_INST_MSG_MULHU    32'b0000001_?????_?????_011_?????_0110011  // not supported.
 `define RISCV_INST_MSG_DIV      32'b0000001_?????_?????_100_?????_0110011
 `define RISCV_INST_MSG_DIVU     32'b0000001_?????_?????_101_?????_0110011
 `define RISCV_INST_MSG_REM      32'b0000001_?????_?????_110_?????_0110011
@@ -359,8 +359,6 @@ module riscv_InstMsgDisasm
         `RISCV_INST_MSG_NOP     : $sformat( dasm, "nop                      "                         );
         `RISCV_INST_MSG_LUI     : $sformat( dasm, "lui    r%02d, %08x     ",         rd,       imm_u  );
         `RISCV_INST_MSG_AUIPC   : $sformat( dasm, "auipc  r%02d, %08x     ",         rd,       imm_u  );
-        // `RISCV_INST_MSG_J       : $sformat( dasm, "j      r%02d, %08x     ",         rd,       imm_uj );
-        // `RISCV_INST_MSG_JL     : $sformat( dasm, "jal    r%02d, %08x     ",         rd,       imm_uj );
         `RISCV_INST_MSG_JAL     : $sformat( dasm, "jal    r%02d, %08x     ",         rd,       imm_uj );
         `RISCV_INST_MSG_JALR    : $sformat( dasm, "jalr   r%02d, r%02d, %08x",       rd,  rs1, imm_i  );
         `RISCV_INST_MSG_BEQ     : $sformat( dasm, "beq    r%02d, r%02d, %08x",       rs1, rs2, imm_sb );
@@ -399,9 +397,9 @@ module riscv_InstMsgDisasm
         `RISCV_INST_MSG_CSRW    : $sformat( dasm, "csrw   r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
         // RISCV32M
         `RISCV_INST_MSG_MUL     : $sformat( dasm, "mul    r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
-        // `RISCV_INST_MSG_MULH    : $sformat( dasm, "mulh   r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
-        // `RISCV_INST_MSG_MULHSU  : $sformat( dasm, "mulhsu r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
-        // `RISCV_INST_MSG_MULHU   : $sformat( dasm, "mulhu  r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
+        `RISCV_INST_MSG_MULH    : $sformat( dasm, "mulh   r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
+        `RISCV_INST_MSG_MULHSU  : $sformat( dasm, "mulhsu r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
+        `RISCV_INST_MSG_MULHU   : $sformat( dasm, "mulhu  r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
         `RISCV_INST_MSG_DIV     : $sformat( dasm, "div    r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
         `RISCV_INST_MSG_DIVU    : $sformat( dasm, "divu   r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
         `RISCV_INST_MSG_REM     : $sformat( dasm, "rem    r%02d, r%02d, r%02d     ", rd,  rs1, rs2    );
@@ -466,9 +464,9 @@ module riscv_InstMsgDisasm
         `RISCV_INST_MSG_CSRW    : $sformat( minidasm, "csrw  ");
         // RISCV32M
         `RISCV_INST_MSG_MUL     : $sformat( minidasm, "mul   ");
-        // `RISCV_INST_MSG_MULH    : $sformat( minidasm, "mulh  ");
-        // `RISCV_INST_MSG_MULHSU  : $sformat( minidasm, "mulhsu");
-        // `RISCV_INST_MSG_MULHU   : $sformat( minidasm, "mulhu ");
+        `RISCV_INST_MSG_MULH    : $sformat( minidasm, "mulh  ");
+        `RISCV_INST_MSG_MULHSU  : $sformat( minidasm, "mulhsu");
+        `RISCV_INST_MSG_MULHU   : $sformat( minidasm, "mulhu ");
         `RISCV_INST_MSG_DIV     : $sformat( minidasm, "div   ");
         `RISCV_INST_MSG_DIVU    : $sformat( minidasm, "divu  ");
         `RISCV_INST_MSG_REM     : $sformat( minidasm, "rem   ");

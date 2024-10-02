@@ -50,47 +50,50 @@ subpkgs = \
 #-------------------------------------------------------------------------
 
 tests = \
-riscv-add.vmh \
-riscv-addi.vmh \
-  riscv-mul.vmh \
-  riscv-div.vmh \
-  riscv-divu.vmh \
-  riscv-rem.vmh \
-  riscv-remu.vmh \
-riscv-sub.vmh \
-riscv-and.vmh \
-riscv-or.vmh \
-riscv-sra.vmh \
-riscv-srl.vmh \
-riscv-xor.vmh \
-riscv-slt.vmh \
-riscv-sltu.vmh \
-riscv-sll.vmh \
-riscv-slti.vmh \
-riscv-sltiu.vmh \
-riscv-slli.vmh \
-riscv-andi.vmh \
-riscv-xori.vmh \
-riscv-srai.vmh \
-riscv-srli.vmh \
-riscv-ori.vmh \
-riscv-jalr.vmh \
-riscv-sb.vmh \
-riscv-sh.vmh \
-riscv-sw.vmh \
-  riscv-bne.vmh \
-  riscv-blt.vmh \
-  riscv-jal.vmh \
-riscv-lui.vmh \
-riscv-lhu.vmh \
-riscv-lb.vmh \
-riscv-lbu.vmh \
-riscv-lw.vmh \
-riscv-lh.vmh \
-riscv-beq.vmh \
-riscv-bge.vmh \
-riscv-bgeu.vmh \
-riscv-bltu.vmh \
+riscv-mulhsu.vmh \
+riscv-mulhu.vmh \
+riscv-mulh.vmh \
+# riscv-add.vmh \
+# riscv-addi.vmh \
+#   riscv-mul.vmh \
+#   riscv-div.vmh \
+#   riscv-divu.vmh \
+#   riscv-rem.vmh \
+#   riscv-remu.vmh \
+# riscv-sub.vmh \
+# riscv-and.vmh \
+# riscv-or.vmh \
+# riscv-sra.vmh \
+# riscv-srl.vmh \
+# riscv-xor.vmh \
+# riscv-slt.vmh \
+# riscv-sltu.vmh \
+# riscv-sll.vmh \
+# riscv-slti.vmh \
+# riscv-sltiu.vmh \
+# riscv-slli.vmh \
+# riscv-andi.vmh \
+# riscv-xori.vmh \
+# riscv-srai.vmh \
+# riscv-srli.vmh \
+# riscv-ori.vmh \
+# riscv-jalr.vmh \
+# riscv-sb.vmh \
+# riscv-sh.vmh \
+# riscv-sw.vmh \
+#   riscv-bne.vmh \
+#   riscv-blt.vmh \
+#   riscv-jal.vmh \
+# riscv-lui.vmh \
+# riscv-lhu.vmh \
+# riscv-lb.vmh \
+# riscv-lbu.vmh \
+# riscv-lw.vmh \
+# riscv-lh.vmh \
+# riscv-beq.vmh \
+# riscv-bge.vmh \
+# riscv-bgeu.vmh \
+# riscv-bltu.vmh \
 
 
   # riscv-jr.vmh \

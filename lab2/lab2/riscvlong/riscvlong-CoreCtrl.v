@@ -263,6 +263,8 @@ module riscv_CoreCtrl
   localparam md_divu = 3'd2;
   localparam md_rem  = 3'd3;
   localparam md_remu = 3'd4;
+  localparam md_mulu = 3'd5;
+  localparam md_mulsu = 3'd6;
 
   // MulDiv Mux Select
 
@@ -388,6 +390,10 @@ module riscv_CoreCtrl
       `RISCV_INST_MSG_DIVU    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_divu,    y, mdm_l, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
       `RISCV_INST_MSG_REM     :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_rem,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
       `RISCV_INST_MSG_REMU    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_remu,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      //extension
+      `RISCV_INST_MSG_MULH    :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_mul,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_MULHU   :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_mulu,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
+      `RISCV_INST_MSG_MULHSU  :cs={ y,  n,    br_none, pm_p,   am_rdat, y,  bm_rdat,  y,   alu_x, md_mulsu,    y, mdm_u, em_md, nr,  ml_x, dmm_x,  wm_alu, y,  rd, n   };
       //                                j     br       pc      op0      rs1 op1       rs2 alu       md       md md     ex      mem  mem   memresp wb      rf      csr
       //                            val taken type     muxsel  muxsel   en  muxsel    en  fn        fn       en muxsel muxsel  rq   len   muxsel  muxsel  wen wa  wen
       //Memory Instructions

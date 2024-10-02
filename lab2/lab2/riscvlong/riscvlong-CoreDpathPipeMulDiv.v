@@ -81,7 +81,7 @@ module riscv_CoreDpathPipeMulDiv
                          :                         b_reg;
 
   // Unsigned computation
-
+  wire [63:0] productu = a_reg * b_reg;
   wire [31:0] quotientu  = a_reg / b_reg;
   wire [31:0] remainderu = a_reg % b_reg;
 
@@ -91,6 +91,9 @@ module riscv_CoreDpathPipeMulDiv
   wire [31:0] quotient_raw  = a_unsign / b_unsign;
   wire [31:0] remainder_raw = a_unsign % b_unsign;
 
+  // mulsu
+  wire [63:0] productsu_raw = a_unsign * b_reg;
+  wire [63:0] productsu = ( a_reg[31] == 1'b1 ) ? ( ~productsu_raw + 1'b1 ): productsu_raw;
   // Signed Product
 
   wire [63:0] product
@@ -117,6 +120,8 @@ module riscv_CoreDpathPipeMulDiv
     : ( fn_reg == `IMULDIV_MULDIVREQ_MSG_FUNC_DIVU ) ? { remainderu, quotientu }
     : ( fn_reg == `IMULDIV_MULDIVREQ_MSG_FUNC_REM  ) ? { remainder, quotient }
     : ( fn_reg == `IMULDIV_MULDIVREQ_MSG_FUNC_REMU ) ? { remainderu, quotientu }
+    : ( fn_reg == 3'd5)                              ? productu
+    : ( fn_reg == 3'd6)                              ? productsu
     :                                                  32'bx;
   //----------------------------------------------------------------------
   // dummy1 <- execution
