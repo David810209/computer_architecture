@@ -36,6 +36,8 @@ module riscv_CoreDpathPipeMulDiv_helper
   wire        sink_Mhl = sink_Xhl;
   wire        sink_X2hl = 1'b0;
   wire        sink_X3hl = 1'b0;
+  wire        dummy = 1'b0;
+  wire        dummy_out;
 
   assign done = src_done && sink_done;
 
@@ -72,7 +74,9 @@ module riscv_CoreDpathPipeMulDiv_helper
     .stall_Xhl             (sink_Xhl),
     .stall_Mhl             (sink_Mhl),
     .stall_X2hl            (sink_X2hl),
-    .stall_X3hl            (sink_X3hl)
+    .stall_X3hl            (sink_X3hl),
+    .muldiv_mux_sel_Dhl    (dummy),
+    .muldiv_mux_sel_M3hl    (dummy_out)
 
   );
 

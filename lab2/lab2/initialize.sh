@@ -8,7 +8,3 @@ cd $LAB2_ROOT/ubmark/build
 ../configure --host=riscv32-unknown-elf
 make
 ../convert
-
-cd $LAB2_ROOT/build
-make check-asm-riscvlong
-# make run-bmark-riscvlong

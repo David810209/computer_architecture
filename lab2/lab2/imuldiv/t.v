@@ -143,7 +143,7 @@ module imuldiv_IntDivIterativeDpath
   wire [64:0] a_shift_out = a_reg << 1;
   wire [64:0] sub_out = a_shift_out - b_reg;
 
-  wire [64:0] sub_mx_out = ~sub_out[64] ? {sub_out[64:1], 1'b1} : a_shift_out;
+  wire [64:0] sub_mx_out = ~sub_out[64] ? {sub_out[64:1], 1'b1} : a_shift_out
 
 
   //result

@@ -5,267 +5,234 @@
 `ifndef RISCV_INT_MUL_ITERATIVE_V
 `define RISCV_INT_MUL_ITERATIVE_V
 
-module imuldiv_IntMulIterative
-#(
-  parameter INPUT_SZ = 32
-)(
-  input                clk,
-  input                reset,
+module imuldiv_IntMulIterative (
+  input         clk,
+  input         reset,
 
-  input  [INPUT_SZ-1:0] mulreq_msg_a,
-  input  [INPUT_SZ-1:0] mulreq_msg_b,
-  input         mulreq_val,
-  output        mulreq_rdy,
+  input  [31:0] mulreq_msg_a,        // Operand A
+  input  [31:0] mulreq_msg_b,        // Operand B
+  input         mulreq_val,          // Request valid signal
+  output        mulreq_rdy,          // Request ready signal
 
-  output [2*INPUT_SZ-1:0] mulresp_msg_result,
-  output        mulresp_val,
-  input         mulresp_rdy
+  output [63:0] mulresp_msg_result,  // Result of operation
+  output        mulresp_val,         // Response valid signal
+  input         mulresp_rdy          // Response ready signal   
 );
 
-  wire a_mux_sel, b_mux_sel, result_mux_sel, result_en, add_mux_sel, sign_mux_sel, sign_en;
-  wire b_reg_0, sign;
-  wire [$clog2(INPUT_SZ)-1:0] counter;
+  wire a_mux_sel;
+  wire b_mux_sel;
+  wire result_mux_sel;
+  wire result_en;
+  wire [4:0] counter;
+  wire sign_en;
 
-  imuldiv_IntMulIterativeDpath #(.INPUT_SZ(INPUT_SZ)) dpath
-  (
-    .clk                (clk),
-    .reset              (reset),
-    .mulreq_msg_a       (mulreq_msg_a),
-    .mulreq_msg_b       (mulreq_msg_b),
-    // .mulreq_val         (mulreq_val),
-    // .mulreq_rdy         (mulreq_rdy),
-    .mulresp_msg_result (mulresp_msg_result),
-    // .mulresp_val        (mulresp_val),
-    // .mulresp_rdy        (mulresp_rdy)
-    
-    .a_mux_sel(a_mux_sel),
-    .b_mux_sel(b_mux_sel),
-    .result_mux_sel(result_mux_sel),
-    .result_en(result_en),
-    .add_mux_sel(add_mux_sel),
-    .sign_mux_sel(sign_mux_sel),
+  imuldiv_IntMulIterativeDpath dpath (
+    //system signal
+    .clk(clk),
+    .reset(reset),
+
+    //counter 
+    .counter(counter),
+
+    //sign
     .sign_en(sign_en),
 
-    .b_reg_0(b_reg_0),
-    .counter(counter),
-    .sign(sign)
+    //a reg b reg
+    .mulreq_msg_a(mulreq_msg_a),
+    .mulreq_msg_b(mulreq_msg_b),
+    .a_mux_sel(a_mux_sel),
+    .b_mux_sel(b_mux_sel),
+
+    //result reg
+    .mulresp_msg_result(mulresp_msg_result),
+    .result_mux_sel(result_mux_sel),
+    .result_en(result_en)
   );
 
-  imuldiv_IntMulIterativeCtrl #(.INPUT_SZ(INPUT_SZ)) ctrl
-  (
-    .clk                (clk),
-    .reset              (reset),
-    .mulreq_val         (mulreq_val),
-    .mulreq_rdy         (mulreq_rdy),
-    .mulresp_val        (mulresp_val),
-    .mulresp_rdy        (mulresp_rdy),
+  imuldiv_IntMulIterativeCtrl ctrl (
+    //system signals
+    .clk(clk),
+    .reset(reset),
 
-    .a_mux_sel(a_mux_sel),
-    .b_mux_sel(b_mux_sel),
-    .result_mux_sel(result_mux_sel),
-    .result_en(result_en),
-    .add_mux_sel(add_mux_sel),
-    .sign_mux_sel(sign_mux_sel),
+    //counter
+    .counter(counter),
+
+    //sign reg
     .sign_en(sign_en),
 
-    .b_reg_0(b_reg_0),
-    .counter(counter),
-    .sign(sign)
+    //a reg
+    .a_mux_sel(a_mux_sel),
+
+    //b reg
+    .b_mux_sel(b_mux_sel),
+    
+    //result reg
+    .result_mux_sel(result_mux_sel),
+    .result_en(result_en),
+
+    //val/rdy
+    .mulreq_val(mulreq_val),
+    .mulreq_rdy(mulreq_rdy),
+    .mulresp_val(mulresp_val),
+    .mulresp_rdy(mulresp_rdy)
   );
 
 endmodule
 
-//------------------------------------------------------------------------
-// Datapath
-//------------------------------------------------------------------------
 
-module imuldiv_IntMulIterativeDpath
-#(
-  parameter INPUT_SZ = 32
-)
-(
+
+// //------------------------------------------------------------------------
+// // Datapath
+// //------------------------------------------------------------------------
+
+module imuldiv_IntMulIterativeDpath (
+  //system signal
   input         clk,
   input         reset,
 
-  input  [INPUT_SZ-1:0] mulreq_msg_a,       // Operand A
-  input  [INPUT_SZ-1:0] mulreq_msg_b,       // Operand B
-  // input         mulreq_val,         // Request val Signal
-  // output        mulreq_rdy,         // Request rdy Signal
+  //counter
+   output     [4:0]  counter,
 
-  output [2*INPUT_SZ-1:0] mulresp_msg_result, // Result of operation
-  // output        mulresp_val,        // Response val Signal
-  // input         mulresp_rdy,        // Response rdy Signal
+   //sign 
+   input         sign_en,      // Enable signal for shifting B register
 
-  input a_mux_sel,
-  input b_mux_sel,
-  input result_mux_sel,
-  input result_en,
-  input add_mux_sel,
-  input sign_mux_sel,
-  input sign_en,
+   //a reg b reg
+  input  [31:0] mulreq_msg_a,        // Operand A
+  input  [31:0] mulreq_msg_b,        // Operand B
+  input         a_mux_sel,           // Mux selector for A
+  input         b_mux_sel,           // Mux selector for B
 
-  output b_reg_0,
-  output [$clog2(INPUT_SZ)-1:0] counter,
-  output sign
+  //result reg
+  output [63:0] mulresp_msg_result,  // Result of operation
+  input         result_mux_sel,      // Mux selector for Result
+  input         result_en           // Enable signal for result register
+  
+ 
 );
 
-  // //----------------------------------------------------------------------
-  // // Input Logic
-  // //----------------------------------------------------------------------
-  wire sign_bit_a = mulreq_msg_a[INPUT_SZ-1];
-  wire sign_bit_b = mulreq_msg_b[INPUT_SZ-1];
+  //counter
+  reg [4:0] counter_reg;
+  always @(posedge clk) begin
+    if (reset) begin
+      counter_reg <= 5'd31;
+    end else if (b_mux_sel) begin
+      counter_reg <= 5'd31;
+    end else if (counter_reg != 0) begin
+      counter_reg <= counter_reg - 1;
+    end
+  end
+  assign counter = counter_reg;
 
-  wire [2*INPUT_SZ-1:0] unsigned_a = { {INPUT_SZ{1'b0}}, ( sign_bit_a ) ? (~mulreq_msg_a + 1'b1) : mulreq_msg_a};
-  wire [INPUT_SZ-1:0] unsigned_b = ( sign_bit_b ) ? (~mulreq_msg_b + 1'b1) : mulreq_msg_b;
+  //sign
+  reg sign_reg;
 
-  reg [2*INPUT_SZ-1:0] a_reg;
-  reg [INPUT_SZ-1:0] b_reg;
-  
-  wire [2*INPUT_SZ-1:0] a_shift_out;
-  wire [INPUT_SZ-1:0] b_shift_out;
-
-  assign a_shift_out = a_reg << 1;
-  assign b_shift_out = b_reg >> 1;
-
-  always @( posedge clk ) begin
-    // a_mux
-    // 1 for unsigned_a, 0 for a_shift_out
-    a_reg <= a_mux_sel ? unsigned_a : a_shift_out;
-
-    // b_mux
-    // 1 for unsigned_b, 0 for b_shift_out
-    b_reg <= b_mux_sel ? unsigned_b : b_shift_out;
+  always @(posedge clk) begin
+    if (reset) begin
+      sign_reg <= 0;
+    end else begin
+      sign_reg = (sign_en) ? mulreq_msg_a[31] ^ mulreq_msg_b[31] : sign_reg;
+    end
   end
 
-  assign b_reg_0 = b_reg[0];
+  //a reg b reg
+  wire [63:0] unsigned_a = (mulreq_msg_a[31]) ? ({32'b0, ~mulreq_msg_a + 1'b1}) : {32'b0, mulreq_msg_a};
+  wire [31:0] unsigned_b = (mulreq_msg_b[31]) ? (~mulreq_msg_b + 1'b1) : mulreq_msg_b;
 
-  // //----------------------------------------------------------------------
-  // // Result Logic
-  // //----------------------------------------------------------------------
-  reg [2*INPUT_SZ-1:0] result_reg;
-  wire [2*INPUT_SZ-1:0] result_mux, add_mux_out, temp_add;
+  reg [63:0] a_reg;
+  reg [31:0] b_reg;
+  
 
-  assign temp_add = a_reg + result_reg;
+  always @(posedge clk) begin
+    if (reset) begin
+      a_reg <= 64'b0;
+      b_reg <= 64'b0;
+    end else begin
+      a_reg <= (a_mux_sel) ? unsigned_a : a_reg << 1;
+      b_reg <= (b_mux_sel) ? unsigned_b : b_reg >> 1;
+    end
+  end
 
-  // 0 for add out, 1 for result_reg
-  assign add_mux_out = add_mux_sel ? result_reg : temp_add;
 
-  // result_mux
-  // 1 for 64'b0, 0 for add_mux_out
-  assign result_mux = result_mux_sel ? 0 : add_mux_out;
+  //result reg
+  reg [63:0] result_reg;
+  wire [63:0] result_mux;
+  assign result_mux = result_mux_sel ? 0 : (~b_reg[0] ? result_reg : a_reg + result_reg);
 
   always @( posedge clk ) begin
     result_reg <= result_en ? result_mux : result_reg;
   end
 
-  wire [2*INPUT_SZ-1:0] signed_result;
-  assign signed_result = ~result_reg + 1'b1;
 
-  // 0 for signed_result, 1 for original result
-  assign mulresp_msg_result = sign_mux_sel ? result_reg : signed_result;
+  assign mulresp_msg_result = ~sign_reg ? result_reg : ~result_reg + 1'b1;
 
-  // //----------------------------------------------------------------------
-  // // Counter Logic
-  // //----------------------------------------------------------------------
-  reg [$clog2(INPUT_SZ)-1:0] counter_reg;
 
-  always @(posedge clk) begin
-    if (reset) begin
-      counter_reg <= INPUT_SZ-1;
-    end else if (b_mux_sel) begin
-      counter_reg <= INPUT_SZ-1;
-    end else if (counter_reg != 0) begin
-      counter_reg <= counter_reg - 1;
-    end
-  end
-
-  assign counter = counter_reg;
-
-  // //----------------------------------------------------------------------
-  // // Sign Logic
-  // //----------------------------------------------------------------------
-  reg sign_reg;
-
-  always @( posedge clk ) begin
-    sign_reg <= sign_en ? mulreq_msg_a[INPUT_SZ-1] ^ mulreq_msg_b[INPUT_SZ-1] : sign_reg;
-  end
-
-  assign sign = sign_reg;
 
 endmodule
+
+
 
 //------------------------------------------------------------------------
 // Control Logic
 //------------------------------------------------------------------------
-
-module imuldiv_IntMulIterativeCtrl
-#(
-  parameter INPUT_SZ = 32
-)
-(
+module imuldiv_IntMulIterativeCtrl (
+  //system signals
   input         clk,
   input         reset,
 
-  input         mulreq_val,         // Request val Signal
-  output        mulreq_rdy,         // Request rdy Signal
+  //counter
+  input [4:0]   counter,
 
-  output        mulresp_val,        // Response val Signal
-  input         mulresp_rdy,        // Response rdy Signal
+  //sign reg
+  output   sign_en,
+  
+  //a reg
+  output     a_mux_sel,
 
-  output a_mux_sel,
-  output b_mux_sel,
-  output result_mux_sel,
-  output result_en,
-  output add_mux_sel,
-  output sign_mux_sel,
-  output sign_en,
+  //b reg
+  output    b_mux_sel,
 
-  input b_reg_0,
-  input [$clog2(INPUT_SZ)-1:0] counter,
-  input sign
+  //result reg
+  output     result_mux_sel,
+  output    result_en,
+
+  //val/rdy 
+  input         mulreq_val,  // The request val signal should be set high when new operands are available for the muldiv unit
+  output    mulreq_rdy,  // request rdy signal should be high when the muldiv unit is ready to accept new operands
+  output     mulresp_val, // the response val signal should go high when the result is valid and ready
+  input         mulresp_rdy  // the response rdy signal should be high when the result is ready to be accepted by the next module
 );
 
-  reg [1:0] state;
-  localparam IDLE   = 2'd0;
-  localparam RUN    = 2'd1;
-  localparam FINISH = 2'd2;
+  reg [1:0] S;
+  localparam S_IDLE = 2'd0,
+             S_CAL = 2'd1,
+             S_DONE = 2'd2;
 
-  assign mulreq_rdy = (state == IDLE);
-  assign mulresp_val = (state == FINISH);
 
   always @(posedge clk or posedge reset) begin
-    if (reset) begin
-      state <= IDLE;
-    end else begin
-      case (state)
-        IDLE: begin
-          if (mulreq_val) begin
-            state <= RUN;
-          end
-        end
-        RUN: begin
-          if (counter == 0) begin
-            state <= FINISH;
-          end
-        end
-        FINISH: begin
-          if (mulresp_rdy) begin
-            state <= IDLE;
-          end
-        end
-      endcase
-    end
+      if (reset) begin
+        S <= S_IDLE;
+      end
+      else begin
+        case (S)
+          S_IDLE: 
+            if (mulreq_val) S <= S_CAL;
+          S_CAL: 
+            if (counter == 0) S <= S_DONE; 
+          S_DONE: 
+            if(mulresp_rdy) S <= S_IDLE;
+        endcase
+      end
   end
 
-  // Control signal assignments
-  assign a_mux_sel      = (state == IDLE);
-  assign b_mux_sel      = (state == IDLE);
-  assign result_mux_sel = (state == IDLE);
-  assign result_en      = (state == RUN || state == IDLE);
-  assign add_mux_sel    = ~b_reg_0;
-  assign sign_mux_sel   = ~sign;
-  assign sign_en        = (state == IDLE);
-
+  assign mulreq_rdy = (S == S_IDLE);
+   assign sign_en = (S == S_IDLE);
+  assign a_mux_sel = (S == S_IDLE);
+  assign b_mux_sel = (S == S_IDLE);
+  assign result_mux_sel = (S == S_IDLE);
+  assign result_en = (S == S_CAL || S == S_IDLE);
+ assign mulresp_val = (S == S_DONE);
+    
 endmodule
+
 
 `endif

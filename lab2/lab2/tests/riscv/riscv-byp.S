@@ -7,47 +7,75 @@
         TEST_RISCV_BEGIN
 
         //-----------------------------------------------------------------
-        // Branch tests
+        // rr bypass
         //-----------------------------------------------------------------
-
-        TEST_BR2_OP_TAKEN( bne,  0,  1 )
-        TEST_BR2_OP_TAKEN( bne,  1,  0 )
-        TEST_BR2_OP_TAKEN( bne, -1,  1 )
-        TEST_BR2_OP_TAKEN( bne,  1, -1 )
-
-        TEST_BR2_OP_NOTTAKEN( bne,  0,  0 )
-        TEST_BR2_OP_NOTTAKEN( bne,  1,  1 )
-        TEST_BR2_OP_NOTTAKEN( bne, -1, -1 )
+        li x1, 1
+        li x2, 2
+        add x3, x1, x2
+        sub x4, x3, x2
+        or x5, x3, x4
+        TEST_INSERT_NOPS(1);
+        and x6, x4, x5
+        mul x3, x5, x6
+        TEST_INSERT_NOPS(1)
+        mul x4, x3, x5
+        TEST_CHECK_EQ(x4, 9)
+       
 
         //-----------------------------------------------------------------
-        // Bypassing tests
+        // imm tests
         //-----------------------------------------------------------------
-
-        TEST_BR2_SRC01_BYP( 0, 0, bne, 0, 0 )
-        TEST_BR2_SRC01_BYP( 0, 1, bne, 0, 0 )
-        TEST_BR2_SRC01_BYP( 0, 2, bne, 0, 0 )
-        TEST_BR2_SRC01_BYP( 1, 0, bne, 0, 0 )
-        TEST_BR2_SRC01_BYP( 1, 1, bne, 0, 0 )
-        TEST_BR2_SRC01_BYP( 2, 0, bne, 0, 0 )
-
-        TEST_BR2_SRC10_BYP( 0, 0, bne, 0, 0 )
-        TEST_BR2_SRC10_BYP( 0, 1, bne, 0, 0 )
-        TEST_BR2_SRC10_BYP( 0, 2, bne, 0, 0 )
-        TEST_BR2_SRC10_BYP( 1, 0, bne, 0, 0 )
-        TEST_BR2_SRC10_BYP( 1, 1, bne, 0, 0 )
-        TEST_BR2_SRC10_BYP( 2, 0, bne, 0, 0 )
-
-        // Test that there is no branch delay slot
+        li x1, 1
+        li x2, 2
+        addi x3, x2, 20
+        add  x4, x3, x2
+        slli x2, x2, 1
+        mul  x5, x4, x2
+        addi x6, x5, 12
+        TEST_CHECK_EQ(x6, 108)
+        
+        //-----------------------------------------------------------------
+        // load use tests
+        //-----------------------------------------------------------------                  
+        
+        la    x1, tdata_0  
+        
+        li x2, 1                                                 
+        lw x3, 0(x1)          
+        add x4, x2, x3
+        sub x5, x3, x4
+        lw x3, 8(x1)
+        add x4, x5, x3;
+        lw x3, 12(x1);
+        add x5, x3, x4;
+        TEST_CHECK_EQ( x5, 6 )   
+        //-----------------------------------------------------------------
+        // sw data tests
+        //-----------------------------------------------------------------    
+        
+        la    x1, tdata_0 
 
         li x2, 1
-        bne x2, x0, 1f
-        addi x2, x2, 1
-        addi x2, x2, 1
-        addi x2, x2, 1
-        addi x2, x2, 1
-    1:  addi x2, x2, 1
-        addi x2, x2, 1
-        TEST_CHECK_EQ( x2, 3 )
+        li x3, 2
+        add x4, x3, x2
+        sw x4, 0(x1)
+        lw x6, 0(x1)
+        TEST_CHECK_EQ( x6,3 )
+        add x5, x3, x4
+        sw x5, 4(x1)
+        lw x6, 4(x1)
+        TEST_CHECK_EQ( x6,5 )
 
         TEST_RISCV_END
 
+        //-----------------------------------------------------------------
+        // Test data
+        //-----------------------------------------------------------------
+
+        .section .data
+        .align 4
+
+tdata_0:  .word 0x00000001
+tdata_1:  .word 0x00000002
+tdata_2:  .word 0x00000003
+tdata_3:  .word 0x00000004
